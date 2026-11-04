@@ -17,7 +17,7 @@ mcp = FastMCP("Gestor de Notas", host=HOST, port=PORT)
 
 
 @mcp.tool()
-def listar_notas_temáticas(nombre_tema: str) -> str:
+def listar_notas_tematicas(nombre_tema: str) -> str:
     """Lista todos los archivos de texto disponibles en la carpeta nombrada igual que la temática dada por el usuario , se buscarán estas carpetas dentro de la carpeta de notas."""
     base = os.path.realpath(NOTES_DIR)
     dirpath = os.path.realpath(os.path.join(base, nombre_tema))
@@ -61,7 +61,6 @@ def Copiar_nota(nombre_nota: str) -> str:
 
     if not os.path.isfile(archivo_origen):
         return "Error: La nota no existe."
-
     
     try:
         ruta_completa_destino = os.path.join(destino, f"{nombre_nota}.txt")
@@ -77,24 +76,24 @@ def Copiar_nota(nombre_nota: str) -> str:
     
    
 
-@mcp.tool()
-def leer_nota(nombre_archivo: str) -> str:
-    """Lee el contenido de una nota específica."""
-    base = os.path.realpath(NOTES_DIR)
-    filepath = os.path.realpath(os.path.join(base, nombre_archivo))
+# @mcp.tool()
+# def leer_nota(nombre_archivo: str) -> str:
+#     """Lee el contenido de una nota específica."""
+#     base = os.path.realpath(NOTES_DIR)
+#     filepath = os.path.realpath(os.path.join(base, nombre_archivo))
 
-    # Comprobar que el archivo está dentro de la carpeta de notas
-    if os.path.commonpath([base, filepath]) != base:
-        return "Error: Acceso denegado a archivos fuera del directorio de notas."
+#     # Comprobar que el archivo está dentro de la carpeta de notas
+#     if os.path.commonpath([base, filepath]) != base:
+#         return "Error: Acceso denegado a archivos fuera del directorio de notas."
 
-    if not os.path.isfile(filepath):
-        return "Error: La nota no existe."
+#     if not os.path.isfile(filepath):
+#         return "Error: La nota no existe."
 
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return f.read()
-    except Exception as e:
-        return f"Error leyendo el archivo: {str(e)}"
+#     try:
+#         with open(filepath, "r", encoding="utf-8") as f:
+#             return f.read()
+#     except Exception as e:
+#         return f"Error leyendo el archivo: {str(e)}"
 
 
 if __name__ == "__main__":
