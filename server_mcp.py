@@ -50,7 +50,7 @@ def crear_nota(nombre_nota: str,contenido_nota: str) -> str:
 @mcp.tool()
 def Copiar_nota(nombre_nota: str) -> str:
     """Copia un archivo indicado por el usuario de la carpeta local de descargas a la carpeta recepción."""
-    base = os.path.realpath(NOTES_DIR)
+    base = os.path.realpath(DESCARGAS_DIR)
     destino = os.path.realpath(RECEPCION_DIR)
 
     archivo_origen = os.path.realpath(os.path.join(base, nombre_nota))
