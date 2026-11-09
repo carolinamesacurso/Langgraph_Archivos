@@ -70,6 +70,8 @@ def Copiar_nota(nombre_nota: str) -> str:
         
         with open(ruta_completa_destino, "w", encoding="utf-8") as f:
             f.write(contenido)
+
+        return "Archivo copiado a la carpeta de recepción"
     except Exception as e:
         return f"Error copiando el archivo: {str(e)}"
 
