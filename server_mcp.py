@@ -20,10 +20,18 @@ mcp = FastMCP("Gestor de Notas", host=HOST, port=PORT)
 def listar_notas_tematicas(nombre_tema: str) -> str:
     """Lista todos los archivos de texto disponibles en la carpeta nombrada igual que la temática dada por el usuario , se buscarán estas carpetas dentro de la carpeta de notas."""
     base = os.path.realpath(NOTES_DIR)
+
+    # if nombre_tema not in TEMÁTICAS:
+    #         return "Error: La temática no es válida. "
+
     dirpath = os.path.realpath(os.path.join(base, nombre_tema))
 
+    if os.path.commonpath([base, dirpath]) != base:
+            return "Error: Acceso denegado fuera del directorio de notas."
+    
     if not os.path.isdir(dirpath):
-            return "Error: La carpeta de la temática no existe."
+            return f"Error: La carpeta de la temática no existe. Temáticas existentes {TEMÁTICAS}"
+    
     try:
         files = sorted(os.listdir(dirpath))
         return "\n".join(files) if files else "No hay notas aún en esa temática."
@@ -35,11 +43,24 @@ def crear_nota(nombre_nota: str,contenido_nota: str) -> str:
     """Crea una nota como un archivo .txt para guardarlo en la carpeta de recepción ."""
     base = os.path.realpath(RECEPCION_DIR)
 
+#   # Añadir .txt solamente si no está presente
+#         if not nombre_nota.endswith(".txt"):
+#             nombre_nota += ".txt"
+
+
     if not os.path.isdir(base):
             return "Error: La carpeta no existe."
+    
     try:
         ruta_completa = os.path.join(base, f"{nombre_nota}.txt")
+        
+        if os.path.commonpath([base, ruta_completa]) != base:
+                return "Error: Acceso denegado a archivos fuera del directorio de notas."
 
+        # Comprobar si el archivo ya existe
+        if os.path.exists(ruta_completa):
+            return "Error: Ya existe una nota con ese nombre."
+        
         with open(ruta_completa, "w", encoding="utf-8") as f:
             f.write(contenido_nota)
 
