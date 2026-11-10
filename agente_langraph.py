@@ -21,7 +21,8 @@ async def main():
     llm = ChatOllama(
         model='llama3.1:8b-instruct-q4_K_M',
         temperature=0,
-        base_url="http://localhost:11434",
+        base_url="http://10.42.68.45:11434"
+        # base_url="http://localhost:11434",
     )
 
     # Conexión MCP por HTTP (devuelve read, write y una función para obtener el session id)
