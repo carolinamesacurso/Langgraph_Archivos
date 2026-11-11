@@ -19,12 +19,13 @@ async def ainput(prompt: str) -> str:
 async def main():
     # Configurar el LLM
     llm = ChatOllama(
-        # model='llama3.1:8b-instruct-q4_K_M',
-        model='llama3.1:8b',
+        model='llama3.1:8b-instruct-q4_K_M',
+        # model='llama3.1:8b',
         temperature=0,
         # base_url="http://10.42.68.45:11434"
-        base_url="http://localhost:11434",
+        base_url="http://127.0.0.1:11434",
     )
+    
 
     # Conexión MCP por HTTP (devuelve read, write y una función para obtener el session id)
     async with streamable_http_client(MCP_URL) as (read, write, _get_session_id):

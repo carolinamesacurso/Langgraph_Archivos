@@ -5,9 +5,10 @@ import os
 HOST = "127.0.0.1"   # usa "0.0.0.0" si quieres acceder desde otra máquina
 PORT = 8000
 #path de ubuntu 
-NOTES_DIR = "/home/carolinamesamartine/notasPruebas/misnotas" #temáticas dir
-RECEPCION_DIR = "/home/carolinamesamartine/Escritorio/notasPruebas/recepcion" #recepcion dir 
-DESCARGAS_DIR = "/home/carolinamesamartine/notasPruebas/descargas" #descargas dir 
+# NOTES_DIR = "/home/carolinamesamartine/notasPruebas/misnotas" #temáticas dir
+NOTES_DIR = "/home/pabilion/notasPruebas/misnotas" #temáticas dir
+RECEPCION_DIR = "/home/pabilion/Escritorio/notasPruebas/recepcion" #recepcion dir 
+DESCARGAS_DIR = "/home/pabilion/notasPruebas/descargas" #descargas dir 
 TEMÁTICAS= ["cocina", "deporte", "lectura"]
 os.makedirs(NOTES_DIR, exist_ok=True)
 os.makedirs(RECEPCION_DIR, exist_ok=True)
