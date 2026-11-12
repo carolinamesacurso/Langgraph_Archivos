@@ -19,14 +19,19 @@ async def ainput(prompt: str) -> str:
 async def main():
     # Configurar el LLM
     llm = ChatOllama(
-        model='llama3.1:8b-instruct-q4_K_M',
-        # model='llama3.1:8b',
+        # model='llama3.1:8b-instruct-q4_K_M',
+        model='llama3.1:8b',
         temperature=0,
+        base_url="http://localhost:11434"
         # base_url="http://10.42.68.45:11434"
-        base_url="http://127.0.0.1:11434",
+        # base_url="http://127.0.0.1:11434",
     )
     
-
+# llm = ChatOllama(
+#     model="llama3.1:8b",
+#     temperature=0,
+#     base_url="http://localhost:11434"
+# )
     # Conexión MCP por HTTP (devuelve read, write y una función para obtener el session id)
     async with streamable_http_client(MCP_URL) as (read, write, _get_session_id):
         async with ClientSession(read, write) as session:
@@ -38,7 +43,25 @@ async def main():
 
             # Memoria del agente
             memory = MemorySaver()
-            system_prompt = "Eres un asistente que usa herramientas MCP para ayudar al usuario. Responde en español."
+            system_prompt = """
+            Eres un asistente que usa herramientas MCP para ayudar al usuario. Responde en español.
+
+            Tus funciones principales van a ser crear una nota , copiar una nota de la carpeta de descargas a la carpeta de recepción y leer el contenido de una nota específica.  
+            Estos serán los pasos a seguir para cada función:
+
+            Cuando el usuario quiera crear una nota:
+            - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
+            - Pregunta al usuario el contenido de la nota si no lo ha proporcionado.
+            - Utiliza a la herramienta Crear_nota SOLO cuando tengas el nombre y contenido de la nota.
+            - Cuando tengas el nombre y contenido de la nota, llama a la herramienta Crear_nota con los parámetros nombre_nota y contenido_nota que has obtenido anteriormente.
+            - No afirmes que la nota se ha creado si la herramienta no ha realizado la operación correctamente.
+
+            Cuando el usuario quiera listar las notas por temática:
+            - Pregunta al usuario la temática de las notas si no lo ha proporcionado.
+            - Utiliza a la herramienta Listar_notas SOLO cuando tengas la temática de las notas
+            - Cuando tengas la temática de las notas, llama a la herramienta Listar_notas con el parámetro temática que has obtenido anteriormente.
+            - No afirmes que la lista de notas se ha obtenido si la herramienta no ha realizado la operación correctamente.
+            """
 
             app = create_agent(
                 llm,
@@ -61,9 +84,12 @@ async def main():
 
                 async for s in app.astream(inputs, config=config, stream_mode="values"):
                     message = s["messages"][-1]
+                    # if hasattr(message, "tool_calls") and message.tool_calls:
+                    #     print(f"   [MCP: Llamando a {message.tool_calls[0]['name']}...]")
                     if hasattr(message, "tool_calls") and message.tool_calls:
-                        print(f"   [MCP: Llamando a {message.tool_calls[0]['name']}...]")
-
+                        for llamada in message.tool_calls:
+                            print(f"   [MCP: Llamando a {llamada['name']}]")
+                            print(f"   Argumentos enviados: {llamada['args']}")
                 print(f"\nRESPUESTA FINAL:\n{message.content}")
 
 

@@ -7,7 +7,7 @@ PORT = 8000
 #path de ubuntu 
 # NOTES_DIR = "/home/carolinamesamartine/notasPruebas/misnotas" #temáticas dir
 NOTES_DIR = "/home/pabilion/notasPruebas/misnotas" #temáticas dir
-RECEPCION_DIR = "/home/pabilion/Escritorio/notasPruebas/recepcion" #recepcion dir 
+RECEPCION_DIR = "/home/pabilion/notasPruebas/recepcion" #recepcion dir 
 DESCARGAS_DIR = "/home/pabilion/notasPruebas/descargas" #descargas dir 
 TEMÁTICAS= ["cocina", "deporte", "lectura"]
 os.makedirs(NOTES_DIR, exist_ok=True)
@@ -19,7 +19,14 @@ mcp = FastMCP("Gestor de Notas", host=HOST, port=PORT)
 
 @mcp.tool()
 def listar_notas_tematicas(nombre_tema: str) -> str:
-    """Lista todos los archivos de texto disponibles en la carpeta nombrada igual que la temática dada por el usuario , se buscarán estas carpetas dentro de la carpeta de notas."""
+    """Lista todos los archivos de texto disponibles en la carpeta nombrada igual que la temática dada por el usuario , se buscarán estas carpetas dentro de la carpeta de notas.
+     Parámetros:
+    - nombre_tema: nombre de la temática de las notas a listar (debe coincidir con el nombre de la carpeta que contiene las notas de esa temática)
+
+    IMPORTANTE:
+    - Antes de llamar a esta herramienta, asegúrate de que la temática ha sido proporcionada por el usuario.
+    - No afirmes que la lista de notas se ha obtenido si la herramienta no ha realizado la operación correctamente.
+    """
     base = os.path.realpath(NOTES_DIR)
 
     # if nombre_tema not in TEMÁTICAS:
@@ -41,7 +48,16 @@ def listar_notas_tematicas(nombre_tema: str) -> str:
     
 @mcp.tool()
 def crear_nota(nombre_nota: str,contenido_nota: str) -> str:
-    """Crea una nota como un archivo .txt para guardarlo en la carpeta de recepción ."""
+    """Crea una nota como un archivo .txt para guardarlo en la carpeta de recepción .
+    Parámetros 
+    - nombre_nota: nombre de la nota a crear (sin extensión .txt)
+    - contenido_nota: contenido de la nota a crear
+
+    IMPORTANTE:
+    - Antes de llamar a esta herramienta, asegúrate de que el nombre y contenido de la nota han sido proporcionados por el usuario.
+    - No afirmes que la nota se ha creado si la herramienta no ha realizado la operación correctamente.
+    
+    """
     base = os.path.realpath(RECEPCION_DIR)
 
 #   # Añadir .txt solamente si no está presente
