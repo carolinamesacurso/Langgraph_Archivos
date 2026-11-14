@@ -19,13 +19,16 @@ mcp = FastMCP("Gestor de Notas", host=HOST, port=PORT)
 
 @mcp.tool()
 def listar_notas_tematicas(nombre_tema: str) -> str:
-    """Lista todos los archivos de texto disponibles en la carpeta nombrada igual que la temática dada por el usuario , se buscarán estas carpetas dentro de la carpeta de notas.
-     Parámetros:
+    """
+    Lista todos los nombres de los archivos de notas que se encuentran dentro de la carpeta nombrada igual que la temática dada por el usuario 
+    La carpeta de cada temática se encuentra dentro de la carpeta misNotas y debe coincidir con el nombre de la temática.
+    
+    Parámetros:
     - nombre_tema: nombre de la temática de las notas a listar (debe coincidir con el nombre de la carpeta que contiene las notas de esa temática)
 
     IMPORTANTE:
     - Antes de llamar a esta herramienta, asegúrate de que la temática ha sido proporcionada por el usuario.
-    - No afirmes que la lista de notas se ha obtenido si la herramienta no ha realizado la operación correctamente.
+    - No inventes nombres de archivos ni afirmes que el listado de notas se ha obtenido si la herramienta no ha realizado la operación correctamente.
     """
     base = os.path.realpath(NOTES_DIR)
 

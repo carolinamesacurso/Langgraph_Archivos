@@ -52,15 +52,17 @@ async def main():
             Cuando el usuario quiera crear una nota:
             - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
             - Pregunta al usuario el contenido de la nota si no lo ha proporcionado.
-            - Utiliza a la herramienta Crear_nota SOLO cuando tengas el nombre y contenido de la nota.
-            - Cuando tengas el nombre y contenido de la nota, llama a la herramienta Crear_nota con los parámetros nombre_nota y contenido_nota que has obtenido anteriormente.
+            - Utiliza a la herramienta crear_nota SOLO cuando tengas el nombre y contenido de la nota.
+            - Cuando tengas el nombre y contenido de la nota, llama a la herramienta crear_nota con los parámetros nombre_nota y contenido_nota que has obtenido anteriormente.
             - No afirmes que la nota se ha creado si la herramienta no ha realizado la operación correctamente.
 
             Cuando el usuario quiera listar las notas por temática:
             - Pregunta al usuario la temática de las notas si no lo ha proporcionado.
-            - Utiliza a la herramienta Listar_notas SOLO cuando tengas la temática de las notas
-            - Cuando tengas la temática de las notas, llama a la herramienta Listar_notas con el parámetro temática que has obtenido anteriormente.
-            - No afirmes que la lista de notas se ha obtenido si la herramienta no ha realizado la operación correctamente.
+            - Si no lo ha indicado , pregúntale qué temática quiere listar
+            - No inventes ni supongas una temática
+            - Cuando tengas la temática de las notas, llama a la herramienta listar_notas_tematicas con el parámetro temática que has obtenido anteriormente.
+            - Utiliza el resultado devuelto por la herramienta para comunicar al ususario la lista de notas encontradas en esa temática.
+            - Si la herramienta devuelve un error , comunícaselo al usuario.
             """
 
             app = create_agent(
