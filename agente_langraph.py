@@ -9,6 +9,7 @@ from mcp.client.streamable_http import streamable_http_client
 # --- CONFIGURACIÓN DEL SERVIDOR MCP (HTTP) ---
 # El servidor debe estar arrancado antes: python server_http.py
 MCP_URL = "http://127.0.0.1:8000/mcp"
+TEMATICAS = ["cocina", "lectura", "deportes"]
 
 
 async def ainput(prompt: str) -> str:
@@ -26,7 +27,36 @@ async def main():
         # base_url="http://10.42.68.45:11434"
         # base_url="http://127.0.0.1:11434",
     )
+
+    def clasificar_contenido(contenido: str) -> str:
     
+        prompt = f"""
+        Analiza el contenido de la siguiente nota y clasifícalo en UNA de estas temáticas: {TEMATICAS}
+        IMPORTANTE:
+        Deberás de clasificar el contenido según tenga relación con la temática
+
+        Contenido de la nota:{contenido}
+
+        Devuelve exclusivamente el nombre de la temática elegida.
+        No añadas explicaciones.
+        """
+
+        respuesta = llm.invoke(prompt)
+
+        tema = respuesta.content.strip().lower()
+
+        if tema not in TEMATICAS:
+            return "Error: El modelo ha devuelto una temática no válida."
+
+        return tema
+    
+    # Prueba manual
+    # contenido_prueba = "pollo pescado almendras"
+
+    # resultado = clasificar_contenido(contenido_prueba)
+
+    # print("TEMÁTICA ELEGIDA:", resultado)
+
 # llm = ChatOllama(
 #     model="llama3.1:8b",
 #     temperature=0,
@@ -74,6 +104,29 @@ async def main():
             - Interpreta el resultado de la herramienta antes de responder.
             - Si el resultado contiene el texto "Archivo copiado a la carpeta de recepción", considera que la copia ha sido correcta.
             - Si la herramienta devuelve un error , comunícaselo al usuario.
+
+            Cuando el usuario quiera leer una nota:
+             - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
+             - No inventes ni supongas un nombre de nota
+             - Cuando tengas el nombre de la nota, llama a la herramienta leer_nota con el parámetro nombre_nota que has obtenido anteriormente.
+             - Utiliza el resultado devuelto por la herramienta para comunicar al usuario el contenido de la nota.
+             - Si la herramienta devuelve un error , comunícaselo al usuario.
+            
+            Cuando el usuario quiera listar todas las notas de la carpeta de recepción:
+            - Llama a la herramienta listar_notas_recepcion.
+            - Utiliza el resultado devuelto por la herramienta para comunicar al ususario la lista de notas encontradas en esa carpeta.
+            - Si la herramienta devuelve un error , comunícaselo al usuario.
+
+            Cuando el usuario quiera mover un archivo a una temática en concreto:
+            - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
+            - Pregunta al usuario la temática de la nota si no la ha proporcionado.
+            - Utiliza a la herramienta mover_archivo SOLO cuando tengas el nombre y la temática de la nota.
+            - Cuando tengas el nombre y la temática de la nota, llama a la herramienta mover_archivo con los parámetros nombre_nota y tema que has obtenido anteriormente.
+            - No afirmes que la nota se ha movido si la herramienta no ha realizado la operación correctamente.
+            - Interpreta el resultado de la herramienta antes de responder.
+            - Si el resultado contiene el texto "Archivo clasificado correctamente", considera que la creación ha sido correcta.
+
+
             """
 
             app = create_agent(
@@ -110,6 +163,9 @@ async def main():
 
                 print(f"\nRESPUESTA FINAL:\n{message.content}")
 
+
+
+        
 
 if __name__ == "__main__":
     asyncio.run(main())
