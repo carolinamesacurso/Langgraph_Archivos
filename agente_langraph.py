@@ -55,13 +55,24 @@ async def main():
             - Utiliza a la herramienta crear_nota SOLO cuando tengas el nombre y contenido de la nota.
             - Cuando tengas el nombre y contenido de la nota, llama a la herramienta crear_nota con los parámetros nombre_nota y contenido_nota que has obtenido anteriormente.
             - No afirmes que la nota se ha creado si la herramienta no ha realizado la operación correctamente.
-
+            - Interpreta el resultado de la herramienta antes de responder.
+            - Si el resultado contiene el texto "Nota Creada exitosamente en la carpeta Recepción.", considera que la creación ha sido correcta.
+            
             Cuando el usuario quiera listar las notas por temática:
             - Pregunta al usuario la temática de las notas si no lo ha proporcionado.
             - Si no lo ha indicado , pregúntale qué temática quiere listar
             - No inventes ni supongas una temática
             - Cuando tengas la temática de las notas, llama a la herramienta listar_notas_tematicas con el parámetro temática que has obtenido anteriormente.
             - Utiliza el resultado devuelto por la herramienta para comunicar al ususario la lista de notas encontradas en esa temática.
+            - Si la herramienta devuelve un error , comunícaselo al usuario.
+
+            Cuando el usuario quiera almacenar o subir una nota desde la carpeta de descargas a la carpeta de recepción:
+            - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
+            - No inventes ni supongas un nombre de nota
+            - Cuando tengas el nombre de la nota, llama a la herramienta Copiar_nota con el parámetro nombre_nota que has obtenido anteriormente.
+            - No afirmes que la nota se ha copiado si la herramienta no ha realizado la operación correctamente.
+            - Interpreta el resultado de la herramienta antes de responder.
+            - Si el resultado contiene el texto "Archivo copiado a la carpeta de recepción", considera que la copia ha sido correcta.
             - Si la herramienta devuelve un error , comunícaselo al usuario.
             """
 
@@ -92,6 +103,11 @@ async def main():
                         for llamada in message.tool_calls:
                             print(f"   [MCP: Llamando a {llamada['name']}]")
                             print(f"   Argumentos enviados: {llamada['args']}")
+                
+                for msg in s["messages"]:
+                    if msg.type == "tool":
+                        print(f"\n[RESULTADO MCP]: {msg.content}")
+
                 print(f"\nRESPUESTA FINAL:\n{message.content}")
 
 

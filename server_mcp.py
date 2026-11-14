@@ -56,6 +56,10 @@ def crear_nota(nombre_nota: str,contenido_nota: str) -> str:
     - nombre_nota: nombre de la nota a crear (sin extensión .txt)
     - contenido_nota: contenido de la nota a crear
 
+    Interpretación del resultado:
+    Si devuelve "Nota Creada exitosamente en la carpeta Recepción.", significa que el archivo se ha creado correctamente.
+    Si devuelve un mensaje que comienza por "Error:", significa que la operación no se ha completado correctamente.
+
     IMPORTANTE:
     - Antes de llamar a esta herramienta, asegúrate de que el nombre y contenido de la nota han sido proporcionados por el usuario.
     - No afirmes que la nota se ha creado si la herramienta no ha realizado la operación correctamente.
@@ -90,9 +94,28 @@ def crear_nota(nombre_nota: str,contenido_nota: str) -> str:
 
 @mcp.tool()
 def Copiar_nota(nombre_nota: str) -> str:
-    """Copia un archivo indicado por el usuario de la carpeta local de descargas a la carpeta recepción."""
+    """Copia un archivo indicado por el usuario de la carpeta local de descargas a la carpeta local de recepcion.
+    
+    Parámetros:
+    - nombre_nota: nombre del archivo a copiar
+
+    Interpretación del resultado:
+    Si devuelve "Archivo copiado a la carpeta de recepción.", significa que el archivo se ha copiado correctamente.
+    Si devuelve un mensaje que comienza por "Error:", significa que la operación no se ha completado correctamente
+    
+    IMPORTANTE:
+    - Antes de llamar a esta herramienta, asegúrate de que el nombre del archivo ha sido proporcionado por el usuario.
+    - No afirmes que la nota se ha copiado si la herramienta no ha realizado la operación correctamente.
+    - Interpreta el resultado de la herramienta antes de responder.
+    - Si el resultado contiene el texto "Archivo copiado a la carpeta de recepción", considera que la copia ha sido correcta.
+
+    """
     base = os.path.realpath(DESCARGAS_DIR)
     destino = os.path.realpath(RECEPCION_DIR)
+
+
+    if not nombre_nota.endswith(".txt"):
+        nombre_nota += ".txt"
 
     archivo_origen = os.path.realpath(os.path.join(base, nombre_nota))
 
@@ -101,10 +124,10 @@ def Copiar_nota(nombre_nota: str) -> str:
         return "Error: Acceso denegado a archivos fuera del directorio de notas."
 
     if not os.path.isfile(archivo_origen):
-        return "Error: La nota no existe."
+        return f"Error: La nota no existe.{archivo_origen}"
     
     try:
-        ruta_completa_destino = os.path.join(destino, f"{nombre_nota}.txt")
+        ruta_completa_destino = os.path.join(destino, f"{nombre_nota}")
 
         with open(archivo_origen, "r", encoding="utf-8") as f:
             contenido = f.read()
