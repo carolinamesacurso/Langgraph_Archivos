@@ -196,7 +196,35 @@ def listar_notas_recepcion() -> str:
     except Exception as e:
         return f"Error al listar notas: {str(e)}"
 
+# @mcp.tool()
+# def obtener_notas_recepcion() -> dict:
+#     """
+#     Devuelve un diccionario con los nombres y contenidos
+#     de todas las notas de la carpeta de recepción.
+#     """
 
+#     notas = {}
+
+#     if not os.path.isdir(RECEPCION_DIR):
+#         return {"error": "La carpeta de recepción no existe."}
+
+#     for nombre_nota in os.listdir(RECEPCION_DIR):
+
+#         ruta = os.path.join(RECEPCION_DIR, nombre_nota)
+
+#         # Solo procesamos archivos
+#         if os.path.isfile(ruta):
+
+#             try:
+#                 with open(ruta, "r", encoding="utf-8") as archivo:
+#                     contenido = archivo.read()
+
+#                 notas[nombre_nota] = contenido
+
+#             except Exception as e:
+#                 return {"error": f"No se pudo leer {nombre_nota}: {e}"}
+
+#     return notas
 
 
 @mcp.tool()

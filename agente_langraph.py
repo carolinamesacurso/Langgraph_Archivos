@@ -5,12 +5,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_mcp_adapters.tools import load_mcp_tools
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-
+from langchain.tools import tool
+import os
 # --- CONFIGURACIÓN DEL SERVIDOR MCP (HTTP) ---
 # El servidor debe estar arrancado antes: python server_http.py
 MCP_URL = "http://127.0.0.1:8000/mcp"
 TEMATICAS = ["cocina", "lectura", "deportes"]
-
+RECEPCION_DIR = "/home/pabilion/notasPruebas/recepcion"
 
 async def ainput(prompt: str) -> str:
     # Permite que el loop de asyncio siga corriendo mientras el usuario escribe
@@ -50,6 +51,97 @@ async def main():
 
         return tema
     
+    def obtener_notas_recepcion() -> dict:
+        """
+        Devuelve un diccionario con los nombres y contenidos
+        de todas las notas de la carpeta de recepción.
+        """
+
+        notas = {}
+
+        if not os.path.isdir(RECEPCION_DIR):
+            return {"error": "La carpeta de recepción no existe."}
+
+        for nombre_nota in os.listdir(RECEPCION_DIR):
+
+            ruta = os.path.join(RECEPCION_DIR, nombre_nota)
+
+            # Solo procesamos archivos
+            if os.path.isfile(ruta):
+
+                try:
+                    with open(ruta, "r", encoding="utf-8") as archivo:
+                        contenido = archivo.read()
+
+                    notas[nombre_nota] = contenido
+
+                except Exception as e:
+                    return {
+                        "error": f"No se pudo leer {nombre_nota}: {e}"
+                    }
+
+        return notas
+
+    @tool
+    def clasificar_notas(notas: dict[str, str]) -> dict[str, str]:
+        """
+        Clasifica varias notas según su contenido.
+
+        Parámetros:
+        - notas: diccionario donde las claves son los nombres
+          de las notas y los valores son sus contenidos.
+
+        Devuelve un diccionario donde las claves son los nombres
+        de las notas y los valores son las temáticas asignadas.
+        """
+
+        resultado = {}
+
+        for nombre_nota, contenido in notas.items():
+
+            tema = clasificar_contenido(contenido)
+
+            resultado[nombre_nota] = tema
+
+        return resultado
+
+
+    @tool
+    def clasificar_notas_recepcion() -> dict[str, str]:
+        """
+        Obtiene todas las notas de recepción y las clasifica
+        según su contenido.
+
+        Devuelve un diccionario con el nombre de cada nota
+        y su temática correspondiente.
+        """
+
+        # Obtener todas las notas
+        notas = obtener_notas_recepcion()
+
+        # Comprobar si se ha producido un error
+        if "error" in notas:
+            return notas
+
+        # Comprobar si no hay notas
+        if not notas:
+            return {}
+
+        resultado = {}
+
+        # Clasificar cada nota
+        for nombre_nota, contenido in notas.items():
+
+            tema = clasificar_contenido(contenido)
+
+            resultado[nombre_nota] = tema
+
+        return resultado
+
+
+
+
+
     # Prueba manual
     # contenido_prueba = "pollo pescado almendras"
 
@@ -126,12 +218,17 @@ async def main():
             - Interpreta el resultado de la herramienta antes de responder.
             - Si el resultado contiene el texto "Archivo clasificado correctamente", considera que la creación ha sido correcta.
 
-
+            Cuando el usuario solicite clasificar automáticamente las notas de recepción:
+            - Llama a la herramienta clasificar_notas_recepcion.
+            - Si devuelve un diccionario con la clave "error", informa al usuario del problema.
+            - Si devuelve un diccionario vacío, informa de que no hay notas en recepción.
+            - Si devuelve las clasificaciones correctamente, muestra el nombre de cada nota y su temática correspondiente.
+            - No inventes resultados de clasificación.
             """
 
             app = create_agent(
                 llm,
-                tools=mcp_tools,
+                tools=mcp_tools + [clasificar_notas_recepcion],
                 checkpointer=memory,
                 system_prompt=system_prompt,
             )
