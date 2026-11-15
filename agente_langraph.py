@@ -79,10 +79,11 @@ async def main():
         Analiza el contenido de la siguiente nota y clasifícalo en UNA de estas temáticas: {TEMATICAS}
         IMPORTANTE:
         Deberás de clasificar el contenido según tenga relación con la temática
+        Si ninguna temática encaja razonablemente con el contenido,devuelve exactamente: SIN_TEMATICA.
 
         Contenido de la nota:{contenido}
 
-        Devuelve exclusivamente el nombre de la temática elegida.
+        Devuelve exclusivamente el nombre de la temática elegida o SIN_TEMATICA.
         No añadas explicaciones.
         """
 
@@ -105,9 +106,12 @@ async def main():
 
         tema = contenido_respuesta.strip().lower()
 
-        if tema not in TEMATICAS:
-            return "Error: El modelo ha devuelto una temática no válida."
+        # if tema not in TEMATICAS:
+        #     return "Error: El modelo ha devuelto una temática no válida."
 
+        if tema not in TEMATICAS:
+            return None
+        
         return tema
     
     def obtener_notas_recepcion() -> dict:
@@ -286,18 +290,44 @@ async def main():
         if not clasificaciones:
             return {"mensaje": "No hay notas en la carpeta de recepción."}
 
-        # 4. Comprobar que las clasificaciones son válidas
-        if any(tema not in TEMATICAS for tema in clasificaciones.values()):
-            return {"error": "Se han obtenido temáticas no válidas."}
+        # 4. Separar las notas válidas de las pendientes
+        notas_validas = {
+            nota: tema
+            for nota, tema in clasificaciones.items()
+            if tema in TEMATICAS
+        }
 
-        # 5. Mover todas las notas
-        resultados = mover_archivos(clasificaciones)
+        notas_pendientes = {
+            nota: tema
+            for nota, tema in clasificaciones.items()
+            if tema not in TEMATICAS
+        }
+
+        # 5. Mover únicamente las notas válidas
+        if notas_validas:
+            resultados = mover_archivos(notas_validas)
+        else:
+            resultados = {}
 
         # 6. Devolver los resultados
         return {
             "clasificaciones": clasificaciones,
-            "movimientos": resultados
+            "movimientos": resultados,
+            "notas_pendientes": notas_pendientes
         }
+    
+        # # 4. Comprobar que las clasificaciones son válidas
+        # if any(tema not in TEMATICAS for tema in clasificaciones.values()):
+        #     return {"error": "Se han obtenido temáticas no válidas."}
+
+        # # 5. Mover todas las notas
+        # resultados = mover_archivos(clasificaciones)
+
+        # # 6. Devolver los resultados
+        # return {
+        #     "clasificaciones": clasificaciones,
+        #     "movimientos": resultados
+        # }
     
     # Prueba manual
     # contenido_prueba = "pollo pescado almendras"
