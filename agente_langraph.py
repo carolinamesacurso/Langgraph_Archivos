@@ -7,12 +7,13 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from langchain.tools import tool
 import os
+import shutil
 # --- CONFIGURACIÓN DEL SERVIDOR MCP (HTTP) ---
 # El servidor debe estar arrancado antes: python server_http.py
 MCP_URL = "http://127.0.0.1:8000/mcp"
-TEMATICAS = ["cocina", "lectura", "deportes"]
+TEMATICAS = ["cocina", "lectura", "deportes"] #cambiar a deporte
 RECEPCION_DIR = "/home/pabilion/notasPruebas/recepcion"
-
+NOTES_DIR = "/home/pabilion/notasPruebas/misnotas"
 async def ainput(prompt: str) -> str:
     # Permite que el loop de asyncio siga corriendo mientras el usuario escribe
     return await asyncio.to_thread(input, prompt)
@@ -82,7 +83,7 @@ async def main():
 
         return notas
 
-    @tool
+    
     def clasificar_notas(notas: dict[str, str]) -> dict[str, str]:
         """
         Clasifica varias notas según su contenido.
@@ -106,7 +107,6 @@ async def main():
         return resultado
 
 
-    @tool
     def clasificar_notas_recepcion() -> dict[str, str]:
         """
         Obtiene todas las notas de recepción y las clasifica
@@ -138,10 +138,109 @@ async def main():
 
         return resultado
 
+    def mover_archivo(nombre_nota: str, tema: str) -> str:
+        """
+        Mueve una nota desde Recepción a su carpeta temática.
+        """
 
+        if tema not in TEMATICAS:
+            return f"Error: La temática '{tema}' no está permitida."
 
+        if not nombre_nota or os.path.basename(nombre_nota) != nombre_nota:
+            return "Error: Nombre de archivo no válido."
 
+        base_recepcion = os.path.realpath(RECEPCION_DIR)
+        base_notas = os.path.realpath(NOTES_DIR)
 
+        if not os.path.isdir(base_recepcion):
+            return "Error: La carpeta Recepción no existe."
+
+        if not os.path.isdir(base_notas):
+            return "Error: La carpeta de notas no existe."
+
+        if not nombre_nota.endswith(".txt"):
+            nombre_nota += ".txt"
+
+        archivo_origen = os.path.realpath(
+            os.path.join(base_recepcion, nombre_nota)
+        )
+
+        if os.path.commonpath([base_recepcion, archivo_origen]) != base_recepcion:
+            return "Error: Acceso denegado."
+
+        if not os.path.isfile(archivo_origen):
+            return "Error: El archivo no existe en Recepción."
+
+        try:
+            carpeta_destino = os.path.realpath(
+                os.path.join(base_notas, tema)
+            )
+
+            if os.path.commonpath([base_notas, carpeta_destino]) != base_notas:
+                return "Error: Ruta de destino no válida."
+
+            os.makedirs(carpeta_destino, exist_ok=True)
+
+            if not os.path.isdir(carpeta_destino):
+                return "Error: El destino no es una carpeta."
+
+            ruta_destino = os.path.join(carpeta_destino, nombre_nota)
+
+            if os.path.exists(ruta_destino):
+                return "Error: Ya existe una nota con ese nombre en la temática."
+
+            shutil.move(archivo_origen, ruta_destino)
+
+            return "Archivo clasificado correctamente."
+
+        except Exception as e:
+            return f"Error al mover el archivo: {str(e)}"
+
+    def mover_archivos(clasificaciones: dict[str, str]) -> dict:
+        """
+        Recibe un diccionario con los nombres de las notas
+        y sus temáticas, y las mueve a sus carpetas correspondientes.
+        """
+
+        resultados = {}
+
+        for nombre_nota, tema in clasificaciones.items():
+            resultado = mover_archivo(nombre_nota, tema)
+            resultados[nombre_nota] = resultado
+
+        return resultados
+
+    @tool
+    def clasificar_y_mover_notas() -> dict:
+        """
+        Clasifica todas las notas de recepción y las mueve
+        a sus carpetas temáticas correspondientes.
+        """
+
+        # 1. Clasificar todas las notas
+        clasificaciones = clasificar_notas_recepcion()
+
+        # 2. Comprobar si se ha producido algún error
+        if "error" in clasificaciones:
+            return clasificaciones
+
+        # 3. Comprobar si hay notas para clasificar
+        if not clasificaciones:
+            return {"mensaje": "No hay notas en la carpeta de recepción."}
+
+        # 4. Comprobar que las clasificaciones son válidas
+        if any(tema not in TEMATICAS for tema in clasificaciones.values()):
+            return {"error": "Se han obtenido temáticas no válidas."}
+
+        # 5. Mover todas las notas
+        resultados = mover_archivos(clasificaciones)
+
+        # 6. Devolver los resultados
+        return {
+            "clasificaciones": clasificaciones,
+            "movimientos": resultados
+        }
+    
     # Prueba manual
     # contenido_prueba = "pollo pescado almendras"
 
@@ -162,6 +261,13 @@ async def main():
             # Importa automáticamente todas las tools que ofrece el servidor
             mcp_tools = await load_mcp_tools(session)
             print("Tools disponibles:", ", ".join(t.name for t in mcp_tools))
+
+            ##prueba temporal
+            # for herramienta in mcp_tools:
+            #     if herramienta.name == "mover_archivo":
+            #         print("Herramienta:", herramienta.name)
+            #         print("Argumentos:", herramienta.args)
+
 
             # Memoria del agente
             memory = MemorySaver()
@@ -218,17 +324,34 @@ async def main():
             - Interpreta el resultado de la herramienta antes de responder.
             - Si el resultado contiene el texto "Archivo clasificado correctamente", considera que la creación ha sido correcta.
 
-            Cuando el usuario solicite clasificar automáticamente las notas de recepción:
-            - Llama a la herramienta clasificar_notas_recepcion.
-            - Si devuelve un diccionario con la clave "error", informa al usuario del problema.
-            - Si devuelve un diccionario vacío, informa de que no hay notas en recepción.
-            - Si devuelve las clasificaciones correctamente, muestra el nombre de cada nota y su temática correspondiente.
-            - No inventes resultados de clasificación.
+            Cuando el usuario solicite clasificar y mover todas las notas de recepción:
+
+            1. Ejecuta la herramienta `clasificar_y_mover_notas`.
+
+            2. Espera a que termine su ejecución y examina el resultado.
+
+            3. Esta herramienta realiza internamente todo el proceso:
+            - Obtiene las notas de la carpeta de recepción.
+            - Clasifica cada nota según su contenido en una de las temáticas disponibles: cocina, lectura o deportes.
+            - Mueve cada nota a su carpeta temática correspondiente.
+
+            4. Interpreta el resultado devuelto por la herramienta:
+            - Comunica las clasificaciones realizadas.
+            - Informa del resultado de cada movimiento.
+            - Si algún archivo no se ha podido mover, comunica el error correspondiente.
+            - Si no hay notas en recepción, informa al usuario.
+
+            IMPORTANTE:
+            - Utiliza exclusivamente `clasificar_y_mover_notas` para realizar esta operación.
+            - No ejecutes por separado las funciones de clasificación y movimiento.
+            - No inventes ni modifiques las clasificaciones devueltas.
+            - No afirmes que todos los archivos se han movido correctamente si existen errores.
+
             """
 
             app = create_agent(
                 llm,
-                tools=mcp_tools + [clasificar_notas_recepcion],
+                tools=mcp_tools + [clasificar_y_mover_notas],
                 checkpointer=memory,
                 system_prompt=system_prompt,
             )
@@ -246,6 +369,23 @@ async def main():
                 inputs = {"messages": [("user", pregunta)]}
 
                 async for s in app.astream(inputs, config=config, stream_mode="values"):
+
+
+                    ##prueba temporal 
+                    # print("\n--- HISTORIAL DE MENSAJES ---")
+
+                    # for msg in s["messages"]:
+                    #     print(f"\nTipo: {msg.type}")
+                    #     print(f"Contenido: {msg.content}")
+
+                    #     if hasattr(msg, "tool_calls") and msg.tool_calls:
+                    #         print(f"Llamadas: {msg.tool_calls}")
+
+                    # print("--- FIN DEL HISTORIAL ---")
+
+
+
+
                     message = s["messages"][-1]
                     # if hasattr(message, "tool_calls") and message.tool_calls:
                     #     print(f"   [MCP: Llamando a {message.tool_calls[0]['name']}...]")

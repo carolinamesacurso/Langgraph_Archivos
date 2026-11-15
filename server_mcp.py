@@ -227,75 +227,91 @@ def listar_notas_recepcion() -> str:
 #     return notas
 
 
-@mcp.tool()
-def mover_archivo(nombre_nota: str, tema: str) -> str:
-    """
-    Mueve una nota desde Recepción a su carpeta temática.
+# @mcp.tool()
+# def mover_archivo(nombre_nota: str, tema: str) -> str:
+#     """
+#     Mueve una nota desde Recepción a su carpeta temática.
 
-    Solo permite las temáticas prefijadas:
-    cocina, lectura y deportes.
-    Si la carpeta temática no existe, la crea.
-    """
+#     Solo permite las temáticas prefijadas:
+#     cocina, lectura y deportes.
+#     Si la carpeta temática no existe, la crea.
+#     """
 
-    if tema not in TEMÁTICAS:
-        return f"Error: La temática '{tema}' no está permitida."
+#     if tema not in TEMÁTICAS:
+#         return f"Error: La temática '{tema}' no está permitida."
 
-    # Comprobar que el nombre corresponde a un archivo,
-    # no a una ruta o subcarpeta
-    if not nombre_nota or os.path.basename(nombre_nota) != nombre_nota:
-        return "Error: Nombre de archivo no válido."
+#     # Comprobar que el nombre corresponde a un archivo,
+#     # no a una ruta o subcarpeta
+#     if not nombre_nota or os.path.basename(nombre_nota) != nombre_nota:
+#         return "Error: Nombre de archivo no válido."
 
-    base_recepcion = os.path.realpath(RECEPCION_DIR)
-    base_notas = os.path.realpath(NOTES_DIR)
+#     base_recepcion = os.path.realpath(RECEPCION_DIR)
+#     base_notas = os.path.realpath(NOTES_DIR)
 
-    if not os.path.isdir(base_recepcion):
-        return "Error: La carpeta Recepción no existe."
+#     if not os.path.isdir(base_recepcion):
+#         return "Error: La carpeta Recepción no existe."
 
-    if not os.path.isdir(base_notas):
-        return "Error: La carpeta de notas no existe."
+#     if not os.path.isdir(base_notas):
+#         return "Error: La carpeta de notas no existe."
     
-    if not nombre_nota.endswith(".txt"):
-                nombre_nota += ".txt"
+#     if not nombre_nota.endswith(".txt"):
+#                 nombre_nota += ".txt"
 
-    # Obtener la ruta real del archivo de origen
-    archivo_origen = os.path.realpath(os.path.join(base_recepcion, nombre_nota))
+#     # Obtener la ruta real del archivo de origen
+#     archivo_origen = os.path.realpath(os.path.join(base_recepcion, nombre_nota))
 
-    if os.path.commonpath([base_recepcion, archivo_origen]) != base_recepcion:
-        return "Error: Acceso denegado."
+#     if os.path.commonpath([base_recepcion, archivo_origen]) != base_recepcion:
+#         return "Error: Acceso denegado."
 
-    if not os.path.isfile(archivo_origen):
-        return "Error: El archivo no existe en Recepción."
+#     if not os.path.isfile(archivo_origen):
+#         return "Error: El archivo no existe en Recepción."
 
-    try:
-        # Crear la carpeta temática si no existe
-        carpeta_destino = os.path.realpath(
-            os.path.join(base_notas, tema)
-        )
+#     try:
+#         # Crear la carpeta temática si no existe
+#         carpeta_destino = os.path.realpath(
+#             os.path.join(base_notas, tema)
+#         )
 
-        if os.path.commonpath([base_notas, carpeta_destino]) != base_notas:
-            return "Error: Ruta de destino no válida."
+#         if os.path.commonpath([base_notas, carpeta_destino]) != base_notas:
+#             return "Error: Ruta de destino no válida."
 
-        os.makedirs(carpeta_destino, exist_ok=True)
+#         os.makedirs(carpeta_destino, exist_ok=True)
 
-        # Comprobar que el destino es realmente una carpeta
-        if not os.path.isdir(carpeta_destino):
-            return "Error: El destino no es una carpeta."
+#         # Comprobar que el destino es realmente una carpeta
+#         if not os.path.isdir(carpeta_destino):
+#             return "Error: El destino no es una carpeta."
 
-        # Construir la ruta final
-        ruta_destino = os.path.join(carpeta_destino, nombre_nota)
+#         # Construir la ruta final
+#         ruta_destino = os.path.join(carpeta_destino, nombre_nota)
 
-        # Evitar sobrescribir archivos existentes
-        if os.path.exists(ruta_destino):
-            return "Error: Ya existe una nota con ese nombre en la temática."
+#         # Evitar sobrescribir archivos existentes
+#         if os.path.exists(ruta_destino):
+#             return "Error: Ya existe una nota con ese nombre en la temática."
 
-        # Mover el archivo
-        shutil.move(archivo_origen, ruta_destino)
+#         # Mover el archivo
+#         shutil.move(archivo_origen, ruta_destino)
 
-        return f"Archivo clasificado correctamente."
+#         return f"Archivo clasificado correctamente."
 
-    except Exception as e:
-        return f"Error al mover el archivo: {str(e)}"
+#     except Exception as e:
+#         return f"Error al mover el archivo: {str(e)}"
 
+# @mcp.tool()
+# def mover_archivos(clasificaciones: dict[str, str]) -> dict:
+#     """
+#     Recibe un diccionario con los nombres de las notas
+#     y sus temáticas, y las mueve a sus carpetas correspondientes.
+#     """
+
+#     resultados = {}
+
+#     for nombre_nota, tema in clasificaciones.items():
+
+#         resultado = mover_archivo(nombre_nota, tema)
+
+#         resultados[nombre_nota] = resultado
+
+#     return resultados
 
 
 
