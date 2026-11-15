@@ -8,12 +8,43 @@ from mcp.client.streamable_http import streamable_http_client
 from langchain.tools import tool
 import os
 import shutil
+from langchain_google_genai import ChatGoogleGenerativeAI
+from dotenv import load_dotenv
+
 # --- CONFIGURACIÓN DEL SERVIDOR MCP (HTTP) ---
 # El servidor debe estar arrancado antes: python server_http.py
 MCP_URL = "http://127.0.0.1:8000/mcp"
 TEMATICAS = ["cocina", "lectura", "deportes"] #cambiar a deporte
 RECEPCION_DIR = "/home/pabilion/notasPruebas/recepcion"
 NOTES_DIR = "/home/pabilion/notasPruebas/misnotas"
+
+load_dotenv()
+GEMINI_API_KEY=os.getenv("GEMINI_API_KEY")
+
+def obtener_llm(proveedor: str, modelo: str):
+
+    if proveedor.lower() == "ollama":
+
+        return ChatOllama(
+            model=modelo,
+            temperature=0,
+            base_url="http://localhost:11434"
+        )
+
+    elif proveedor.lower() == "gemini":
+        if not GEMINI_API_KEY:
+            raise ValueError("No se ha encontrado GEMINI_API_KEY en el archivo .env")
+    
+        return ChatGoogleGenerativeAI(
+            model=modelo,
+            temperature=0,
+            google_api_key=GEMINI_API_KEY
+        )
+
+    else:
+        raise ValueError(f"Proveedor no soportado: {proveedor}")
+
+    
 async def ainput(prompt: str) -> str:
     # Permite que el loop de asyncio siga corriendo mientras el usuario escribe
     return await asyncio.to_thread(input, prompt)
@@ -21,13 +52,25 @@ async def ainput(prompt: str) -> str:
 
 async def main():
     # Configurar el LLM
-    llm = ChatOllama(
-        # model='llama3.1:8b-instruct-q4_K_M',
-        model='llama3.1:8b',
-        temperature=0,
-        base_url="http://localhost:11434"
-        # base_url="http://10.42.68.45:11434"
-        # base_url="http://127.0.0.1:11434",
+    # llm = ChatOllama(
+    #     # model='llama3.1:8b-instruct-q4_K_M',
+    #     model='llama3.1:8b',
+    #     temperature=0,
+    #     base_url="http://localhost:11434"
+    #     # base_url="http://10.42.68.45:11434"
+    #     # base_url="http://127.0.0.1:11434",
+    # )
+
+    #para ollama
+    # llm = obtener_llm(
+    #     proveedor="ollama",
+    #     modelo="llama3.1:8b"
+    # )
+
+    #para gemini
+    llm = obtener_llm(
+    proveedor="gemini",
+    modelo="gemini-3.5-flash-lite"
     )
 
     def clasificar_contenido(contenido: str) -> str:
@@ -43,9 +86,24 @@ async def main():
         No añadas explicaciones.
         """
 
+
+        ##prueba
+        # respuesta = llm.invoke(prompt)
+
+        # tema = respuesta.content.strip().lower()
+
         respuesta = llm.invoke(prompt)
 
-        tema = respuesta.content.strip().lower()
+        contenido_respuesta = respuesta.content
+
+        if isinstance(contenido_respuesta, list):
+            contenido_respuesta = "".join(
+                bloque.get("text", "")
+                for bloque in contenido_respuesta
+                if isinstance(bloque, dict)
+            )
+
+        tema = contenido_respuesta.strip().lower()
 
         if tema not in TEMATICAS:
             return "Error: El modelo ha devuelto una temática no válida."
@@ -315,14 +373,6 @@ async def main():
             - Utiliza el resultado devuelto por la herramienta para comunicar al ususario la lista de notas encontradas en esa carpeta.
             - Si la herramienta devuelve un error , comunícaselo al usuario.
 
-            Cuando el usuario quiera mover un archivo a una temática en concreto:
-            - Pregunta al usuario el nombre de la nota si no lo ha proporcionado.
-            - Pregunta al usuario la temática de la nota si no la ha proporcionado.
-            - Utiliza a la herramienta mover_archivo SOLO cuando tengas el nombre y la temática de la nota.
-            - Cuando tengas el nombre y la temática de la nota, llama a la herramienta mover_archivo con los parámetros nombre_nota y tema que has obtenido anteriormente.
-            - No afirmes que la nota se ha movido si la herramienta no ha realizado la operación correctamente.
-            - Interpreta el resultado de la herramienta antes de responder.
-            - Si el resultado contiene el texto "Archivo clasificado correctamente", considera que la creación ha sido correcta.
 
             Cuando el usuario solicite clasificar y mover todas las notas de recepción:
 
